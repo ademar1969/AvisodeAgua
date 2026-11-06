@@ -1,0 +1,4 @@
+// Projeto Android do Aviso de Água
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}

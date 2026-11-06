@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'br.com.avisodeagua.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "br.com.avisodeagua.app"
+        minSdk 26          // Android 8.0 ou mais novo
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+// Sem bibliotecas externas: usa apenas o Android SDK.
+dependencies {
+}

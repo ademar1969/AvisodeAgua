@@ -1,0 +1,9 @@
+Pasta de instaladores (opcional).
+
+O instalar.bat usa estes arquivos se existirem aqui; se nao existirem, baixa da internet:
+  java8-jre.msi                 Java 8 (Eclipse Temurin JRE 64 bits)
+  mariadb.msi                   Banco de dados MariaDB (64 bits)
+  mysql-connector-j-8.4.0.jar   Driver de conexao com o banco
+
+Para instalar sem internet em outro computador: rode baixar-pacotes.bat uma vez
+(com internet) e copie a pasta Instalador inteira.

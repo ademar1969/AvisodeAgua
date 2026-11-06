@@ -1,0 +1,30 @@
+# Compilação do programa Java
+build/
+dist/
+target/
+lib/
+*.class
+
+# Instaladores baixados (grandes demais para o GitHub)
+Instalador/pacotes/*.msi
+Instalador/pacotes/*.jar
+
+# Android Studio / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.iml
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDEs e sistema
+.idea/
+.vscode/
+*.log
+Thumbs.db
+Desktop.ini

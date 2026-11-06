@@ -1,0 +1,21 @@
+AVISO DE AGUA - INSTALACAO
+
+1. De dois cliques em instalar.bat (ele pede permissao de administrador).
+2. Escolha o banco de dados:
+   [1] Instalar o MariaDB neste computador (usuario root, senha 100219)
+   [2] Ja tenho MySQL ou MariaDB instalado
+   [3] Banco em nuvem (configure depois no programa, botao "Banco")
+3. O instalador instala o Java 8 se precisar, o MariaDB (se escolheu 1),
+   o programa, os atalhos e libera a porta 8085 para o app do celular.
+4. No programa: preencha o cadastro e clique em Salvar.
+
+SEM INTERNET em outro computador: rode baixar-pacotes.bat uma vez (com internet)
+e copie a pasta Instalador inteira (os instaladores ficam em "pacotes").
+
+CELULAR: projeto Android na pasta "android" (abra no Android Studio).
+No programa, botao "Celular" mostra o endereco e o codigo para digitar no app.
+
+ATUALIZAR: botao direito na gota > Sair, depois rode instalar.bat de novo.
+Os dados ficam no banco; tabelas novas sao criadas sozinhas.
+
+REMOVER: %LOCALAPPDATA%\AvisodeAgua\desinstalar.bat
