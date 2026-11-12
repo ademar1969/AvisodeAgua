@@ -1,0 +1,108 @@
+# Automação de publicação: busca o código no repositório PRIVADO ademar1969/avisodeagua-fonte (segredo CODIGO_TOKEN)
+# e publica as versões aqui. Para publicar: crie a tag vX.Y.Z neste repositório (script publicar-versao).
+name: Publicar versão (instalador Windows + APK)
+
+# Dispare criando uma tag:  git tag v1.0.0 && git push origin v1.0.0
+# Gera o AvisodeAgua-Setup-X.exe (Windows) e o AvisoDeAgua-X.apk (Android) e publica em Releases.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ademar1969/avisodeagua-fonte
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.CODIGO_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Compilar o programa
+        run: mvn -B -q package
+      - name: Montar o instalador (NSIS)
+        run: |
+          VERSAO=$(grep -m1 -oP '(?<=<version>)[0-9.]+(?=</version>)' pom.xml)
+          echo "Versao: $VERSAO"
+          S=build/setup
+          mkdir -p $S/lib
+          cp target/AvisodeAgua.jar $S/
+          cp Instalador/instalar.bat Instalador/desinstalar.bat Instalador/icone.ico Instalador/LEIA-ME.txt Instalador/termo.txt $S/
+          curl -fsSL -o $S/lib/mysql-connector-j-8.4.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
+          sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+          makensis -V2 -DVERSAO=$VERSAO -DPASTA="$GITHUB_WORKSPACE/$S" packaging/setup.nsi
+          mkdir -p dist && cp packaging/AvisodeAgua-Setup-$VERSAO.exe dist/
+          cp target/AvisodeAgua.jar dist/AvisodeAgua.jar   # usado pela atualização automática do PC
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ademar1969/avisodeagua-fonte
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.CODIGO_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      # APK assinado SEMPRE com a mesma chave (Secrets ANDROID_KEYSTORE_*): assim a versão nova
+      # instala por cima da antiga, sem desinstalar e sem perder os dados do celular.
+      - name: Compilar o APK assinado
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          export APP_VERSAO=$(grep -m1 -oP '(?<=<version>)[0-9.]+(?=</version>)' pom.xml)
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then echo "::error::Falta a chave do app nos Secrets (ANDROID_KEYSTORE_BASE64)"; exit 1; fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/upload.jks"
+          cd android && gradle assembleRelease --no-daemon
+          cd .. && mkdir -p dist && cp android/app/build/outputs/apk/release/app-release.apk dist/AvisoDeAgua-$APP_VERSAO.apk
+          rm -f "$RUNNER_TEMP/upload.jks"
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*
+
+  publicar:
+    needs: [windows, android]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          make_latest: true
+          body: |
+            **Windows (10/11):** baixe o `AvisodeAgua-Setup-...exe` e abra. Ele instala o Java 8 (se precisar), o
+            programa e os atalhos. Os dados ficam na nuvem Aplica Digital: no programa, entre com nome, telefone e
+            senha (opcional). Se o Windows avisar, clique em "Mais informações" → "Executar assim mesmo".
+
+            **Android (8.0 ou mais novo):** baixe o `AvisoDeAgua-...apk` no celular e abra. Se o Android pedir,
+            permita "instalar apps desconhecidos". No app, toque em **Configurar conexão com o PC** e digite o
+            endereço e o código que aparecem no programa do PC (botão **Celular**).
